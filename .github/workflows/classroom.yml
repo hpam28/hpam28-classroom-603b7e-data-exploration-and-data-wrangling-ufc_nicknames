@@ -1,0 +1,38 @@
+name: Autograding Tests
+'on':
+- push
+- repository_dispatch
+permissions:
+  checks: write
+  actions: read
+  contents: read
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Libraries
+      id: libraries
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Libraries
+        setup-command: ''
+        command: pip install -r requirements.txt
+        timeout: 10
+    - name: All test cases
+      id: all-test-cases
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: All test cases
+        setup-command: ''
+        command: python run_autograder.py
+        timeout: 10
+    - name: Autograding Reporter
+      uses: classroom-resources/autograding-grading-reporter@v1
+      env:
+        LIBRARIES_RESULTS: "${{steps.libraries.outputs.result}}"
+        ALL-TEST-CASES_RESULTS: "${{steps.all-test-cases.outputs.result}}"
+      with:
+        runners: libraries,all-test-cases
